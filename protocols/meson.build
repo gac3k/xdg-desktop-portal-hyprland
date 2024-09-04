@@ -21,6 +21,8 @@ else
 	wayland_scanner = find_program('wayland-scanner', native: true)
 endif
 client_protocols = [
+	'wlr-virtual-pointer-unstable-v1.xml',
+	'virtual-keyboard-unstable-v1.xml',
 	'wlr-screencopy-unstable-v1.xml',
 	'wlr-foreign-toplevel-management-unstable-v1.xml',
 	hl_protocol_dir / 'protocols/hyprland-toplevel-export-v1.xml',

@@ -7,6 +7,8 @@
 #include <protocols/wlr-foreign-toplevel-management-unstable-v1-protocol.h>
 #include <protocols/wlr-screencopy-unstable-v1-protocol.h>
 #include <protocols/linux-dmabuf-unstable-v1-protocol.h>
+#include <protocols/virtual-keyboard-unstable-v1-protocol.h>
+#include <protocols/wlr-virtual-pointer-unstable-v1-protocol.h>
 
 #include <pipewire/pipewire.h>
 #include <poll.h>
@@ -71,6 +73,30 @@ inline const wl_output_listener outputListener = {
     .name        = handleOutputName,
     .description = handleOutputDescription,
 };
+
+static void seatCapabilities(void *data, struct wl_seat *wl_seat, uint32_t caps)
+{
+    if (caps & WL_SEAT_CAPABILITY_POINTER) {
+        Debug::log(LOG, "Seat has pointer");
+    }
+    if (caps & WL_SEAT_CAPABILITY_KEYBOARD) {
+        Debug::log(LOG, "Seat has keyboard");
+        wl_display_dispatch(g_pPortalManager->m_sWaylandConnection.display);
+        wl_display_roundtrip(g_pPortalManager->m_sWaylandConnection.display);
+    }
+}
+
+static void seatName(void *data, struct wl_seat *seat, const char *name)
+{
+
+}
+
+inline const wl_seat_listener seat_listener = {
+	.capabilities = seatCapabilities,
+	.name = seatName,
+};
+
+
 
 static void handleDMABUFFormat(void* data, struct zwp_linux_dmabuf_v1* zwp_linux_dmabuf_v1, uint32_t format) {
     ;
@@ -261,6 +287,18 @@ void CPortalManager::onGlobal(void* data, struct wl_registry* registry, uint32_t
         if (!std::any_cast<Hyprlang::INT>(m_sConfig.config->getConfigValue("general:toplevel_dynamic_bind")))
             m_sHelpers.toplevel->activate();
     }
+
+    else if(INTERFACE == wl_seat_interface.name) {
+        m_sWaylandConnection.seat = (wl_seat*)wl_registry_bind(registry, name, &wl_seat_interface, version);
+        //wl_seat_add_listener(m_sWaylandConnection.seat, &seat_listener, data);
+    }
+
+    else if(INTERFACE == zwlr_virtual_pointer_manager_v1_interface.name)
+        m_sWaylandConnection.pointerMgr = (zwlr_virtual_pointer_manager_v1*)wl_registry_bind(registry, name, &zwlr_virtual_pointer_manager_v1_interface, version);
+
+    else if(INTERFACE == zwp_virtual_keyboard_manager_v1_interface.name)
+        m_sWaylandConnection.keyboardMgr = (zwp_virtual_keyboard_manager_v1*)wl_registry_bind(registry, name, &zwp_virtual_keyboard_manager_v1_interface, version);
+
 }
 
 void CPortalManager::onGlobalRemoved(void* data, struct wl_registry* registry, uint32_t name) {
@@ -330,6 +368,8 @@ void CPortalManager::init() {
         else if (!inShellPath("hyprpicker"))
             Debug::log(INFO, "hyprpicker not found. We suggest to use hyprpicker for color picking to be less meh.");
     }
+
+    m_sPortals.remoteDesktop = std::make_unique<CRemoteDesktopPortal>();
 
     wl_display_roundtrip(m_sWaylandConnection.display);
 
@@ -484,7 +524,8 @@ void CPortalManager::startEventLoop() {
     m_sPortals.globalShortcuts.reset();
     m_sPortals.screencopy.reset();
     m_sPortals.screenshot.reset();
-
+    m_sPortals.remoteDesktop.reset();
+    
     m_pConnection.reset();
     pw_loop_destroy(m_sPipewire.loop);
     wl_display_disconnect(m_sWaylandConnection.display);

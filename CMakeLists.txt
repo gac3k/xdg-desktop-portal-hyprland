@@ -7,7 +7,6 @@ project(
   xdg-desktop-portal-hyprland
   DESCRIPTION "An XDG-Destop-Portal backend for Hyprland (and wlroots)"
   VERSION ${VER})
-
 set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
 set(SYSTEMD_SERVICES
     ON
@@ -48,9 +47,11 @@ add_compile_options(
 # dependencies
 message(STATUS "Checking deps...")
 add_subdirectory(hyprland-share-picker)
+add_subdirectory(hyprland-eis)
 
 find_package(Threads REQUIRED)
 find_package(PkgConfig REQUIRED)
+
 pkg_check_modules(
   deps
   REQUIRED
@@ -61,6 +62,8 @@ pkg_check_modules(
   libpipewire-0.3>=1.1.82
   libspa-0.2
   libdrm
+  libei-1.0
+  dbus-1
   gbm
   hyprlang>=0.2.0)
 
@@ -114,6 +117,10 @@ function(protocol protoPath protoName external)
                  PRIVATE protocols/${protoName}-protocol.c)
 endfunction()
 
+protocol("protocols/wlr-virtual-pointer-unstable-v1.xml"
+        "wlr-virtual-pointer-unstable-v1" true)
+protocol("protocols/virtual-keyboard-unstable-v1.xml"
+        "virtual-keyboard-unstable-v1" true)
 protocol("protocols/wlr-foreign-toplevel-management-unstable-v1.xml"
          "wlr-foreign-toplevel-management-unstable-v1" true)
 protocol("protocols/wlr-screencopy-unstable-v1.xml"
@@ -125,8 +132,11 @@ protocol("${HYPRLAND_PROTOCOLS}/protocols/hyprland-toplevel-export-v1.xml"
 protocol("unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml"
          "linux-dmabuf-unstable-v1" false)
 
+
+
 # Installation
 install(TARGETS hyprland-share-picker)
+install(TARGETS hyprland-eis)
 install(TARGETS xdg-desktop-portal-hyprland
         DESTINATION ${CMAKE_INSTALL_LIBEXECDIR})
 

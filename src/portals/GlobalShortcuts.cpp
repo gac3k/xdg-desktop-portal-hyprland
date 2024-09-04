@@ -1,4 +1,3 @@
-#include "GlobalShortcuts.hpp"
 #include "../core/PortalManager.hpp"
 #include "../helpers/Log.hpp"
 

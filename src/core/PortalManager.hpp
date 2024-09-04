@@ -5,9 +5,13 @@
 #include <wayland-client.h>
 #include <hyprlang.hpp>
 
+#include <protocols/virtual-keyboard-unstable-v1-protocol.h>
+#include <protocols/wlr-virtual-pointer-unstable-v1-protocol.h>
+
 #include "../portals/Screencopy.hpp"
 #include "../portals/Screenshot.hpp"
 #include "../portals/GlobalShortcuts.hpp"
+#include "../portals/RemoteDesktop.hpp"
 #include "../helpers/Timer.hpp"
 #include "../shared/ToplevelManager.hpp"
 #include <gbm.h>
@@ -50,6 +54,7 @@ class CPortalManager {
         std::unique_ptr<CScreencopyPortal>      screencopy;
         std::unique_ptr<CScreenshotPortal>      screenshot;
         std::unique_ptr<CGlobalShortcutsPortal> globalShortcuts;
+        std::unique_ptr<CRemoteDesktopPortal>   remoteDesktop;
     } m_sPortals;
 
     struct {
@@ -62,6 +67,7 @@ class CPortalManager {
         void*       linuxDmabuf         = nullptr;
         void*       linuxDmabufFeedback = nullptr;
         wl_shm*     shm                 = nullptr;
+
         gbm_bo*     gbm                 = nullptr;
         gbm_device* gbmDevice           = nullptr;
         struct {
@@ -69,6 +75,12 @@ class CPortalManager {
             size_t formatTableSize = 0;
             bool   deviceUsed      = false;
         } dma;
+        wl_seat*      seat    = nullptr;
+        zwlr_virtual_pointer_manager_v1*     pointerMgr = nullptr;
+        zwp_virtual_keyboard_manager_v1*     keyboardMgr = nullptr;
+
+        int geometryWidth  = 0;
+        int geometryHeight = 0;
     } m_sWaylandConnection;
 
     struct {

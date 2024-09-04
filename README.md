@@ -12,7 +12,7 @@ gbm
 hyprland-protocols
 hyprlang
 libdrm
-libpipewire-0.3
+libpipewire-0.3s
 libspa-0.2
 sdbus-cpp
 wayland-client
